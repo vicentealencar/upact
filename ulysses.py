@@ -1,21 +1,23 @@
 import json
+import operator
 import os
 import socket
 
 from datetime import datetime
 from dateutil import rrule
 from dateutil.parser import parse
+from functools import reduce
 from recurrent import RecurringEvent
 
 def is_day_in_recurrence(recurrence_string, day):
     recurrence = rrule.rrulestr(RecurringEvent().parse(recurrence_string))
-    return (recurrence[0] - day).days == 0
+    return (recurrence[0].date() - day.date()).days == 0
 
 def is_time_in_interval(begin_str, end_str, time):
     begin_time = parse(begin_str).time()
-    end_time = parse(begin_str).time()
+    end_time = parse(end_str).time()
 
-    return begin_time <= time and time <= end_time
+    return begin_time <= time and time < end_time
 
 with open("/etc/pf.conf", "r") as etc_pf:
     pf_conf = etc_pf.read()
@@ -32,13 +34,10 @@ for be in block_exceptions:
     if not is_day_in_recurrence(be["frequency"], today):
         continue
 
-    if reduce(operator.and_, 
+    if reduce(operator.or_, 
             map(lambda period: is_time_in_interval(period[0], period[1], today.time()), be['time_periods'])):
 
         block_list = list(set(block_list) - set(be['urls']))
-
-# TODO: test code above
-
 
 
 ips_to_block = []
@@ -53,7 +52,5 @@ for ip in ips_to_block:
 file_name = "./pf_conf.conf"
 with open(file_name, "w") as pf_conf_file:
     pf_conf_file.write(pf_conf)
-
-# TODO: Use recurrent to parse interval string and dateutil to check if current date/time matches that interval
 
 #os.remove(file_name)
