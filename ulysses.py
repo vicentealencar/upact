@@ -1,13 +1,31 @@
 import json
 import operator
-import os
+import requests
 import socket
+import subprocess
+
+import config
 
 from datetime import datetime
 from dateutil import rrule
 from dateutil.parser import parse
 from functools import reduce
 from recurrent import RecurringEvent
+
+try:
+    with open(config.ALL_DNSES_FILE, "w") as file_dns_all:
+        file_dns_all.write(requests.get(config.ALL_DNSES_URL).content.decode("utf-8"))
+except:
+    print("DNS file could not be downloaded from: %s" % config.ALL_DNSES_URL)
+
+with open(config.ALL_DNSES_FILE, "r") as file_dns_all:
+    all_dnses = set(list(filter(lambda ip: ipaddress.ip_address(ip).version == 4, 
+                            [line.strip() for line in file_dns_all.readlines()])))
+
+with open(config.ALLOWED_DNSES_FILE) as dns_allowed:
+    allowed_dnses = set([addr.strip() for addr in dns_allowed.readlines()])
+
+dnses_to_block = all_dnses - allowed_dnses
 
 def is_day_in_recurrence(recurrence_string, day):
     recurrence = rrule.rrulestr(RecurringEvent().parse(recurrence_string))
@@ -19,11 +37,14 @@ def is_time_in_interval(begin_str, end_str, time):
 
     return begin_time <= time and time < end_time
 
-with open("/etc/pf.conf", "r") as etc_pf:
+with open("./conf_template.conf", "r") as etc_pf:
     pf_conf = etc_pf.read()
 
 with open("./block_list.txt", "r") as block_list_file:
     block_list = [s.strip() for s in block_list_file.readlines()]
+
+with open("./block_ports.txt", "r") as block_ports_file:
+    ports_to_block = [int(s) for s in block_ports_file.readlines()]
 
 with open("./exceptions.json") as exceptions_file:
     block_exceptions = json.loads(exceptions_file.read())
@@ -37,20 +58,38 @@ for be in block_exceptions:
     if reduce(operator.or_, 
             map(lambda period: is_time_in_interval(period[0], period[1], today.time()), be['time_periods'])):
 
+        print("The URL(s) %s are currently accessible" % be['urls'])
+
         block_list = list(set(block_list) - set(be['urls']))
 
 
+# we will nslookup google to check if we have internet connection
+try:
+    socket.gethostbyname_ex(config.INTERNET_CONNECTIVITY_URL)
+except socket.gaierror as ex:
+    print("Couldn't lookup %s. Aborting." % config.INTERNET_CONNECTIVITY_URL)
+    exit(0)
+
 ips_to_block = []
 for host_name in block_list:
-    ignore_me, ignore_me, ip_addresses = socket.gethostbyname_ex(host_name)
-    ips_to_block += ip_addresses
+    try:
+        ignore_me, ignore_me, ip_addresses = socket.gethostbyname_ex(host_name)
+        ips_to_block += ip_addresses
+    except socket.gaierror as ex:
+        blah = ex
+        print("%s not found" % host_name)
 
 for ip in ips_to_block:
     pf_conf += "block return from any to %s" % ip
     pf_conf += "\n"
 
-file_name = "./pf_conf.conf"
-with open(file_name, "w") as pf_conf_file:
+for port in ports_to_block:
+    pf_conf += "block return inet proto { tcp, udp } from any to any port %s" % port
+    pf_conf += "\n"
+
+
+with open(config.PATH, "w+") as pf_conf_file:
     pf_conf_file.write(pf_conf)
 
-#os.remove(file_name)
+
+subprocess.call(["sudo", "pfctl", "-E", "-f", config.PATH])
