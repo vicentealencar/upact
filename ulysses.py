@@ -50,7 +50,7 @@ def dns_lookup(name):
 
     return set(ipv4_result) | set(ipv6_unicast)
 
-with open("./conf_template.conf", "r") as etc_pf:
+with open(config.PF_CONF_TEMPLATE, "r") as etc_pf:
     pf_conf = etc_pf.read()
 
 with open(config.URLS_TO_BLOCK, "r") as block_list_file:
