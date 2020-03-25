@@ -1,10 +1,13 @@
 import dns.resolver
+import ipaddress
+
 
 def global_unicast_address(ipv6):
-    return ":".join(x.split(":")[0:3]) + "::/48"
+    return ":".join(ipv6.split(":")[0:3]) + "::/48"
+
 
 def global_unicast_address_list(ip_list):
-    [global_unicast_address(ip) if ipaddress.ip_address(ip).version == 6 else ip for ip in ip_list]
+    return [global_unicast_address(ip) if ipaddress.ip_address(ip).version == 6 else ip for ip in ip_list]
     
 
 def dns_lookup(name):

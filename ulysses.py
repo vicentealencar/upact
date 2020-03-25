@@ -1,5 +1,4 @@
 import dns.resolver
-import ipaddress
 import json
 import operator
 import requests
@@ -22,8 +21,7 @@ except:
     print("DNS file could not be downloaded from: %s" % config.ALL_DNSES_URL)
 
 with open(config.ALL_DNSES_FILE, "r") as file_dns_all:
-    all_dnses = set(list(filter(lambda ip: ipaddress.ip_address(ip).version == 4, 
-                            [line.strip() for line in file_dns_all.readlines()])))
+    all_dnses = set(networking.global_unicast_address_list([line.strip() for line in file_dns_all.readlines()]))
 
 with open(config.ALLOWED_DNSES_FILE) as dns_allowed:
     allowed_dnses = set([addr.strip() for addr in dns_allowed.readlines()])
