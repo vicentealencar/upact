@@ -24,7 +24,7 @@ with open(config.ALL_DNSES_FILE, "r") as file_dns_all:
     all_dnses = set(networking.global_unicast_address_list([line.strip() for line in file_dns_all.readlines()]))
 
 with open(config.ALLOWED_DNSES_FILE) as dns_allowed:
-    allowed_dnses = set([addr.strip() for addr in dns_allowed.readlines()])
+    allowed_dnses = set(networking.global_unicast_address_list([addr.strip() for addr in dns_allowed.readlines()]))
 
 dnses_to_block = all_dnses - allowed_dnses
 
