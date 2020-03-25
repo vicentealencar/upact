@@ -1,3 +1,5 @@
+import dns.resolver
+import ipaddress
 import json
 import operator
 import requests
@@ -37,6 +39,17 @@ def is_time_in_interval(begin_str, end_str, time):
 
     return begin_time <= time and time < end_time
 
+def dns_lookup(name):
+    ipv4_result = map(lambda x: x.address, dns.resolver.query(name, "A"))
+    try:
+        ipv6_result = map(lambda x: x.address, dns.resolver.query(name, "AAAA"))
+    except dns.resolver.NoAnswer as ex:
+        print(ex.msg)
+        ipv6_result = []
+    ipv6_unicast = list(map(lambda x: ":".join(x.split(":")[0:3]) + "::/48", ipv6_result))
+
+    return set(ipv4_result) | set(ipv6_unicast)
+
 with open("./conf_template.conf", "r") as etc_pf:
     pf_conf = etc_pf.read()
 
@@ -65,19 +78,18 @@ for be in block_exceptions:
 
 # we will nslookup google to check if we have internet connection
 try:
-    socket.gethostbyname_ex(config.INTERNET_CONNECTIVITY_URL)
+    dns_lookup(config.INTERNET_CONNECTIVITY_URL)
 except socket.gaierror as ex:
     print("Couldn't lookup %s. Aborting." % config.INTERNET_CONNECTIVITY_URL)
     exit(0)
 
-ips_to_block = []
+ips_to_block = set()
 for host_name in block_list:
     try:
-        ignore_me, ignore_me, ip_addresses = socket.gethostbyname_ex(host_name)
-        ips_to_block += ip_addresses
-    except socket.gaierror as ex:
-        blah = ex
-        print("%s not found" % host_name)
+        ip_addresses = dns_lookup(host_name)
+        ips_to_block.update(ip_addresses)
+    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
+        print(ex.msg)
 
 for ip in ips_to_block:
     pf_conf += "block return from any to %s" % ip

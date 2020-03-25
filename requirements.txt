@@ -1,2 +1,4 @@
 recurrent
 python-dateutil
+requests
+dnspython
