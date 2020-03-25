@@ -7,6 +7,7 @@ import socket
 import subprocess
 
 import config
+import networking
 
 from datetime import datetime
 from dateutil import rrule
@@ -39,17 +40,6 @@ def is_time_in_interval(begin_str, end_str, time):
 
     return begin_time <= time and time < end_time
 
-def dns_lookup(name):
-    ipv4_result = map(lambda x: x.address, dns.resolver.query(name, "A"))
-    try:
-        ipv6_result = map(lambda x: x.address, dns.resolver.query(name, "AAAA"))
-    except dns.resolver.NoAnswer as ex:
-        print(ex.msg)
-        ipv6_result = []
-    ipv6_unicast = list(map(lambda x: ":".join(x.split(":")[0:3]) + "::/48", ipv6_result))
-
-    return set(ipv4_result) | set(ipv6_unicast)
-
 with open(config.PF_CONF_TEMPLATE, "r") as etc_pf:
     pf_conf = etc_pf.read()
 
@@ -78,7 +68,7 @@ for be in block_exceptions:
 
 # we will nslookup google to check if we have internet connection
 try:
-    dns_lookup(config.INTERNET_CONNECTIVITY_URL)
+    networking.dns_lookup(config.INTERNET_CONNECTIVITY_URL)
 except socket.gaierror as ex:
     print("Couldn't lookup %s. Aborting." % config.INTERNET_CONNECTIVITY_URL)
     exit(0)
@@ -86,7 +76,7 @@ except socket.gaierror as ex:
 ips_to_block = set()
 for host_name in block_list:
     try:
-        ip_addresses = dns_lookup(host_name)
+        ip_addresses = networking.dns_lookup(host_name)
         ips_to_block.update(ip_addresses)
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
         print(ex.msg)
