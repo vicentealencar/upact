@@ -53,13 +53,13 @@ def dns_lookup(name):
 with open("./conf_template.conf", "r") as etc_pf:
     pf_conf = etc_pf.read()
 
-with open("./block_list.txt", "r") as block_list_file:
+with open(config.URLS_TO_BLOCK, "r") as block_list_file:
     block_list = [s.strip() for s in block_list_file.readlines()]
 
-with open("./block_ports.txt", "r") as block_ports_file:
+with open(config.PORTS_TO_BLOCK, "r") as block_ports_file:
     ports_to_block = [int(s) for s in block_ports_file.readlines()]
 
-with open("./exceptions.json") as exceptions_file:
+with open(config.PLAYTIME_RULES) as exceptions_file:
     block_exceptions = json.loads(exceptions_file.read())
 
 for be in block_exceptions:
@@ -100,8 +100,8 @@ for port in ports_to_block:
     pf_conf += "\n"
 
 
-with open(config.PATH, "w+") as pf_conf_file:
+with open(config.PF_CONF_PATH, "w+") as pf_conf_file:
     pf_conf_file.write(pf_conf)
 
 
-subprocess.call(["sudo", "pfctl", "-E", "-f", config.PATH])
+subprocess.call(["sudo", "pfctl", "-E", "-f", config.PF_CONF_PATH])

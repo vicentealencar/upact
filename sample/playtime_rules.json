@@ -1,0 +1,7 @@
+[
+  {
+    "frequency": "every weekend",
+    "urls": ["reddit.com"],
+    "time_periods": [["13:00", "15:00"]]
+  }
+]
