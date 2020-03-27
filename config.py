@@ -21,3 +21,4 @@ INTERNET_CONNECTIVITY_URL = "www.google.com"
 # Auto generated files
 ALL_DNSES_FILE = os.path.join(AUTO_GENERATED_FOLDER, "nameservers-all.txt")
 PF_CONF_PATH = os.path.join(AUTO_GENERATED_FOLDER, "pf.conf")
+BLOCKED_IPS_FILE = os.path.join(AUTO_GENERATED_FOLDER, "blocked_ips.txt")

@@ -1,6 +1,7 @@
 import dns.resolver
 import json
 import operator
+import os
 import requests
 import socket
 import subprocess
@@ -21,10 +22,10 @@ except:
     print("DNS file could not be downloaded from: %s" % config.ALL_DNSES_URL)
 
 with open(config.ALL_DNSES_FILE, "r") as file_dns_all:
-    all_dnses = set(networking.global_unicast_address_list([line.strip() for line in file_dns_all.readlines()]))
+    all_dnses = set([line.strip() for line in file_dns_all.readlines()])
 
 with open(config.ALLOWED_DNSES_FILE) as dns_allowed:
-    allowed_dnses = set(networking.global_unicast_address_list([addr.strip() for addr in dns_allowed.readlines()]))
+    allowed_dnses = set([addr.strip() for addr in dns_allowed.readlines()])
 
 dnses_to_block = all_dnses - allowed_dnses
 
@@ -79,9 +80,16 @@ for host_name in block_list:
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
         print(ex.msg)
 
-for ip in ips_to_block:
-    pf_conf += "block return from any to %s" % ip
-    pf_conf += "\n"
+ips_to_block.update(dnses_to_block)
+
+with open(config.BLOCKED_IPS_FILE, "w") as blocked_ips_file:
+    blocked_ips_file.write("\n".join(ips_to_block))
+
+pf_conf += 'table <blocked_ips> persist file "{0}"'.format(os.path.join(os.getcwd(), config.BLOCKED_IPS_FILE))
+pf_conf += "\n"
+
+pf_conf += "block return from any to <blocked_ips>"
+pf_conf += "\n"
 
 for port in ports_to_block:
     pf_conf += "block return inet proto { tcp, udp } from any to any port %s" % port
