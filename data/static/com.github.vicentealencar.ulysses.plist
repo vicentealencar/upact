@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.github.vicentealencar.ulysses</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>sudo</string>
+        <string>env/bin/python</string>
+        <string>ulysses.py</string>
+    </array>
+
+    <key>RootDirectory</key>
+    <string>/opt/ulysses</string>
+
+    <key>WorkingDirectory</key>
+    <string>/opt/ulysses</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/opt/ulysses/data/logs/logfile.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/opt/ulysses/data/logs/logfile.err</string>
+
+    <key>StartInterval</key>
+    <integer>300</integer>
+</dict>
+</plist>
