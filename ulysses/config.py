@@ -1,7 +1,7 @@
 import os
 
-DATA_FOLDER = "./data"
-CONFIG_FOLDER = os.path.join(DATA_FOLDER, "config")
+DATA_FOLDER = "../data"
+CONFIG_FOLDER = os.path.join(DATA_FOLDER, "private")
 STATIC_FOLDER = os.path.join(DATA_FOLDER, "static")
 AUTO_GENERATED_FOLDER = os.path.join(DATA_FOLDER, "auto_generated")
 

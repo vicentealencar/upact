@@ -8,7 +8,7 @@
     <array>
         <string>sudo</string>
         <string>env/bin/python</string>
-        <string>ulysses.py</string>
+        <string>ulysses/ulysses.py</string>
     </array>
 
     <key>RootDirectory</key>
