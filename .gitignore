@@ -1,7 +1,7 @@
 env/
 private/
 auto_generated/
+data/temp/
 __pycache__/
 nameservers-all.txt
 pf.conf
-
