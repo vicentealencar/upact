@@ -1,4 +1,7 @@
 import argparse
+import ulysses.store.staging as staging
+
+from ulysses.models import BlockedSites
 from recurrent import RecurringEvent
 
 
@@ -38,16 +41,24 @@ class PlaytimeHoursAction(argparse.Action):
 class RemoveAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if namespace.add is not None or namespace.playtime_hours is not None or namespace.playtime_days is not None:
-            raise argparse.ArgumentError(self, 'This argument cannot be specified with any othe parameter')
+            raise argparse.ArgumentError(self, 'This argument cannot be specified with any other parameter')
 
         setattr(namespace, self.dest, values)
 
 
-def sub_parser(subparsers):
+def command(parameters, store):
+    if parameters.add:
+        sites_to_block = BlockedSites(parameters.add, parameters.playtime_days, parameters.playtime_hours)
+        blocked_sites_staging = store()
+        blocked_sites_staging.add(sites_to_block)
+
+
+def sub_parser(subparsers, store=staging.BlockedSites):
     block_sites = subparsers.add_parser("block-sites")
     block_sites.add_argument("--add", nargs="+")
     block_sites.add_argument("--playtime_days", nargs=1, required=False, action=PlaytimeDaysAction)
     block_sites.add_argument("--playtime_hours", nargs="+", required=False, action=PlaytimeHoursAction)
     block_sites.add_argument("--remove", nargs="+", required=False, action=RemoveAction)
+    block_sites.set_defaults(func=lambda x: command(x, store))
 
     return block_sites
