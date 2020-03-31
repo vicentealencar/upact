@@ -17,6 +17,6 @@ def dns_lookup(name):
     except dns.resolver.NoAnswer as ex:
         print(ex.msg)
         ipv6_result = []
-    ipv6_unicast = list(map(global_unicast_address, ipv6_result))
 
-    return set(ipv4_result) | set(ipv6_unicast)
+    return set(ipv4_result) | set(ipv6_result)
+
