@@ -3,9 +3,9 @@ import shlex
 
 from unittest import TestCase
 
-from ulysses.ui.cmdline.blocked_sites import sub_parser
+from ulysses.ui.cmdline.block_sites import sub_parser
 
-class BlockedSitesTests(TestCase):
+class BlockSitesTests(TestCase):
     
     def check_command_fails(self, command):
         try:

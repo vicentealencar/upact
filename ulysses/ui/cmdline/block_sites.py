@@ -30,9 +30,9 @@ class PlaytimeDaysAction(argparse.Action):
 
 
 def sub_parser(subparsers):
-    blocked_sites = subparsers.add_parser("blocked_sites")
-    blocked_sites.add_argument("--add", nargs="+", required=True)
-    blocked_sites.add_argument("--playtime_days", nargs=1, required=False, action=PlaytimeDaysAction)
-    blocked_sites.add_argument("--playtime_hours", nargs="+", required=False, action=PlaytimeHoursAction)
+    block_sites = subparsers.add_parser("block-sites")
+    block_sites.add_argument("--add", nargs="+", required=True)
+    block_sites.add_argument("--playtime_days", nargs=1, required=False, action=PlaytimeDaysAction)
+    block_sites.add_argument("--playtime_hours", nargs="+", required=False, action=PlaytimeHoursAction)
 
-    return blocked_sites
+    return block_sites

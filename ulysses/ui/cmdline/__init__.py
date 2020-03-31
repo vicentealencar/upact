@@ -1,8 +1,8 @@
 import argparse
 
-from . import blocked_sites
+from . import block_sites
 
 main_parser = argparse.ArgumentParser()
 subparsers = main_parser.add_subparsers()
 
-blocked_sites.sub_parser(subparsers)
+block_sites.sub_parser(subparsers)

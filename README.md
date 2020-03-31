@@ -13,10 +13,10 @@ ulysses blocked_nameservers --update
 ulysses blocked_nameservers --disable
   - Disables blocking nameservers. Requires admin privileges
 
-ulysses blocked_sites --add="www.google.com,google.com" --playtime_days="every week" --playtime_hours="13:00-15:00" --playtime_hours="18:00-19:00"
+ulysses block-sites --add="www.google.com,google.com" --playtime_days="every week" --playtime_hours="13:00-15:00" --playtime_hours="18:00-19:00"
 
-ulysses blocked_sites --remove="www.google.com"
+ulysses block-sites --remove="www.google.com"
   - Requires admin privileges if rules have already been persisted
 
-ulysses blocked_sites --persist
+ulysses block-sites --persist
   - Marks the new rules for being persisted
