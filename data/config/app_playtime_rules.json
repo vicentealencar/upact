@@ -1,8 +1,8 @@
 [
   {
     "frequency": "every weekday",
-    "apps": ["Bluestacks"],
-    "time_periods": [["13:00", "15:00"]]
+    "apps": ["BlueStacks"],
+    "time_periods": [["11:00", "13:00"], ["19:00", "21:00"]]
   }
 ]
 

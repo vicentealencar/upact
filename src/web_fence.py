@@ -7,13 +7,13 @@ import socket
 import subprocess
 
 import config
-import networking
+import upact.networking as networking
+
+from upact.datetime import is_time_in_interval, is_day_in_recurrence
 
 from datetime import datetime
-from dateutil import rrule
-from dateutil.parser import parse
 from functools import reduce
-from recurrent import RecurringEvent
+
 
 try:
     with open(config.ALL_DNSES_FILE, "w") as file_dns_all:
