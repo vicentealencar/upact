@@ -1,0 +1,8 @@
+[
+  {
+    "frequency": "every weekday",
+    "apps": ["Bluestacks"],
+    "time_periods": [["13:00", "15:00"]]
+  }
+]
+

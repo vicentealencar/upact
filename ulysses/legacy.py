@@ -29,16 +29,6 @@ with open(config.ALLOWED_DNSES_FILE) as dns_allowed:
 
 dnses_to_block = all_dnses - allowed_dnses
 
-def is_day_in_recurrence(recurrence_string, day):
-    recurrence = rrule.rrulestr(RecurringEvent().parse(recurrence_string))
-    return (recurrence[0].date() - day.date()).days == 0
-
-def is_time_in_interval(begin_str, end_str, time):
-    begin_time = parse(begin_str).time()
-    end_time = parse(end_str).time()
-
-    return begin_time <= time and time < end_time
-
 with open(config.PF_CONF_TEMPLATE, "r") as etc_pf:
     pf_conf = etc_pf.read()
 
@@ -48,7 +38,7 @@ with open(config.URLS_TO_BLOCK, "r") as block_list_file:
 with open(config.PORTS_TO_BLOCK, "r") as block_ports_file:
     ports_to_block = [int(s) for s in block_ports_file.readlines()]
 
-with open(config.PLAYTIME_RULES) as exceptions_file:
+with open(config.WEB_PLAYTIME_RULES) as exceptions_file:
     block_exceptions = json.loads(exceptions_file.read())
 
 for be in block_exceptions:
