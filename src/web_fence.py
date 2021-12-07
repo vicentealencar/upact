@@ -12,11 +12,11 @@ import upact.networking as networking
 from datetime import datetime
 
 
-def generate_ips(db):
+def generate_ips(db, current_time=datetime.now(), networking=networking):
 
-    urls_to_block = [uri for uri in Uri.select().where(Uri.type_uri == 'url') if not(any([playtime.is_active() for playtime in uri.playtime_rules]))]
+    urls_to_block = [uri for uri in Uri.select().where(Uri.type_uri == 'url') if not(any([playtime.is_active(when=current_time, now_date=current_time) for playtime in uri.playtime_rules]))]
 
-    if datetime.now().hour == 15 and datetime.now().minute <= 10:
+    if current_time.hour == 15 and current_time.minute <= 10:
         BlockedIp.truncate_table()
 
     for url in urls_to_block:
