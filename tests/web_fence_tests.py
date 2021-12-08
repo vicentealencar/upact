@@ -1,10 +1,12 @@
 import peewee as pw
 
+import upact.platforms
 import web_fence
 
 from datetime import datetime
 from unittest import TestCase
 from unittest.mock import Mock
+
 from upact.models import *
 
 class WebFenceTests(TestCase):
@@ -122,3 +124,17 @@ class WebFenceTests(TestCase):
                 networking=networking_mock)
 
         self.assertEqual(len(blocked_ips), 0)
+
+    def test_ip_blocking_by_platform(self):
+        upact.platforms['Test'] = Mock()
+
+        networking_mock = Mock()
+        networking_mock.dns_lookup.return_value = {'200.253.245.1'}
+
+        web_fence.block_ips(
+            self.db,
+            current_platform='Test',
+            networking=networking_mock,
+            current_time=datetime(2021, 12, 1, 7, 0, 0))
+
+        self.assertEqual(upact.platforms['Test'].block_ips.call_args[0][0], {'200.253.245.1'})

@@ -1,13 +1,14 @@
 import dns.resolver
-import os
-import subprocess
 import logging
+import platform
 
-from upact.models import *
 import peewee as pw
 
 import config
+
+from upact.models import *
 import upact.networking as networking
+import upact.platforms
 
 from datetime import datetime
 
@@ -35,27 +36,12 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
     return set([ip.address for ip in BlockedIp.select()])
 
 
-def block_ips(ips_to_block):
-
-    with open(config.PF_CONF_TEMPLATE, "r") as etc_pf:
-        pf_conf = etc_pf.read()
-
-    with open(config.BLOCKED_IPS_FILE, "w") as blocked_ips_file:
-        blocked_ips_file.write("\n".join(ips_to_block))
-
-    pf_conf += 'table <blocked_ips> persist file "{0}"'.format(os.path.join(os.getcwd(), config.BLOCKED_IPS_FILE))
-    pf_conf += "\n"
-
-    pf_conf += "block return from any to <blocked_ips>"
-    pf_conf += "\n"
-
-    with open(config.PF_CONF_PATH, "w+") as pf_conf_file:
-        pf_conf_file.write(pf_conf)
-
-    subprocess.call(["sudo", "pfctl", "-E", "-f", config.PF_CONF_PATH])
+def block_ips(db, current_platform=platform.system(), config=config, current_time=datetime.now(), networking=networking):
+    ips_to_block = generate_ips(db, current_time=current_time, networking=networking)
+    upact.platforms[current_platform].block_ips(ips_to_block, config)
 
 
-if __name__ == "__main__":
+def run():
     logging.basicConfig(
         format='%(asctime)s %(levelname)-8s %(message)s',
         level=logging.INFO,
@@ -66,5 +52,9 @@ if __name__ == "__main__":
     db = pw.SqliteDatabase(config.DATABASE_FILE)
     db.connect()
     database_proxy.initialize(db)
-    ips_to_block = generate_ips(db)
-    block_ips(ips_to_block)
+
+    block_ips(db)
+
+
+if __name__ == "__main__":
+    run()
