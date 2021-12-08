@@ -86,3 +86,39 @@ class WebFenceTests(TestCase):
                 networking=networking_mock)
 
         self.assertEqual(ips_to_block, {'200.253.245.1'})
+
+    def test_ips_clear_daily(self):
+        networking_mock = Mock()
+
+        networking_mock.dns_lookup.return_value = {'200.253.245.1'}
+        web_fence.generate_ips(
+                self.db,
+                current_time=datetime(2021, 12, 1, 8, 30, 0),
+                networking=networking_mock)
+
+        networking_mock.dns_lookup.return_value = {'200.253.245.1'}
+        web_fence.generate_ips(
+                self.db,
+                current_time=datetime(2021, 12, 1, 15, 5, 0),
+                networking=networking_mock)
+
+        all_blocked_ips = [bip for bip in BlockedIp.select()]
+        self.assertEqual(len(all_blocked_ips), 0)
+
+    def test_ip_clears_when_playtime_activates(self):
+        networking_mock = Mock()
+        networking_mock.dns_lookup.return_value = {'200.253.245.1'}
+        blocked_ips = web_fence.generate_ips(
+                self.db,
+                current_time=datetime(2021, 12, 1, 8, 30, 0),
+                networking=networking_mock)
+
+        self.assertEqual(len(blocked_ips), 1)
+
+        networking_mock.dns_lookup.return_value = {'200.253.245.1'}
+        blocked_ips = web_fence.generate_ips(
+                self.db,
+                current_time=datetime(2021, 12, 1, 17, 0, 0),
+                networking=networking_mock)
+
+        self.assertEqual(len(blocked_ips), 0)

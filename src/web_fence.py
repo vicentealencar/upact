@@ -14,7 +14,13 @@ from datetime import datetime
 
 def generate_ips(db, current_time=datetime.now(), networking=networking):
 
-    urls_to_block = [uri for uri in Uri.select().where(Uri.type_uri == 'url') if not(any([playtime.is_active(when=current_time, now_date=current_time) for playtime in uri.playtime_rules]))]
+    all_urls = [uri for uri in Uri.select().where(Uri.type_uri == 'url')]
+    urls_to_block = [uri for uri in all_urls if not uri.is_active(when=current_time, now_date=current_time)]
+    urls_to_unblock = [uri for uri in all_urls if uri.is_active(when=current_time, now_date=current_time)]
+
+    for url in urls_to_unblock:
+        for ip in url.ips:
+            ip.delete_instance()
 
     if current_time.hour == 15 and current_time.minute <= 10:
         BlockedIp.truncate_table()
