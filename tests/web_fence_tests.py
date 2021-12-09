@@ -29,7 +29,7 @@ class WebFenceTests(TestCase):
     def test_site_blocked(self):
         networking_mock = Mock()
         networking_mock.dns_lookup.side_effect = [({'200.253.245.1'}, {'2345:0425:2CA1:0000:0000:0567:5673:23b5'})]
-        ips_to_block = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 11, 0, 0),
                 networking=networking_mock)
@@ -59,36 +59,36 @@ class WebFenceTests(TestCase):
     def test_playtime_rule_active(self):
         networking_mock = Mock()
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'},)
-        ips_to_block = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 15, 0, 0),
                 networking=networking_mock)
 
-        self.assertEqual(ips_to_block, set())
+        self.assertEqual(ips_to_block, [])
 
     def test_multiple_playtime_rules_active(self):
         rule2 = PlaytimeRule(from_time="09:00", to_time="10:00", frequency="every day", uri=self.test_uri)
         rule2.save()
         networking_mock = Mock()
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
-        ips_to_block = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 9, 30, 0),
                 networking=networking_mock)
 
-        self.assertEqual(ips_to_block, set())
+        self.assertEqual(ips_to_block, [])
 
     def test_multiple_playtime_rules_inactive(self):
         rule2 = PlaytimeRule(from_time="09:00", to_time="10:00", frequency="every day", uri=self.test_uri)
         rule2.save()
         networking_mock = Mock()
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
-        ips_to_block = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 8, 0, 0),
                 networking=networking_mock)
 
-        self.assertEqual({ip.address for ip in ips_to_block}, {'200.253.245.1'})
+        self.assertEqual([ip.address for ip in ips_to_block], ['200.253.245.1'])
 
     def test_ips_clear_daily(self):
         networking_mock = Mock()
@@ -111,20 +111,20 @@ class WebFenceTests(TestCase):
     def test_ip_clears_when_playtime_activates(self):
         networking_mock = Mock()
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
-        blocked_ips = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 8, 30, 0),
                 networking=networking_mock)
 
-        self.assertEqual(len(blocked_ips), 1)
+        self.assertEqual(len(ips_to_block), 1)
 
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
-        blocked_ips = web_fence.generate_ips(
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
                 self.db,
                 current_time=datetime(2021, 12, 1, 17, 0, 0),
                 networking=networking_mock)
 
-        self.assertEqual(len(blocked_ips), 0)
+        self.assertEqual(len(ips_to_block), 0)
 
     def test_ip_blocking_by_platform(self):
         upact.platforms['Test'] = Mock()
@@ -132,12 +132,12 @@ class WebFenceTests(TestCase):
         networking_mock = Mock()
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
 
-        web_fence.block_ips(
+        web_fence.update_ip_rules(
             self.db,
             current_platform='Test',
             networking=networking_mock,
             current_time=datetime(2021, 12, 1, 7, 0, 0))
 
-        ips_to_block = {ip.address for ip in upact.platforms['Test'].block_ips.call_args[0][0]}
+        ips_to_block = {ip.address for ip in upact.platforms['Test'].update_firewall.call_args[0][0]}
 
         self.assertEqual(ips_to_block, {'200.253.245.1'})

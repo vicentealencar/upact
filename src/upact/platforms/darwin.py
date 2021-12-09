@@ -1,8 +1,9 @@
+import os
 import subprocess
 
 class Darwin:
-    def block_ips(self, ips_to_block, config):
-        ip_addresses = [ip.address for ip in ips_to_block]
+    def update_firewall(self, ips_to_block, ips_to_unblock, config):
+        ip_addresses = {ip.address for ip in ips_to_block}
 
         with open(config.PF_CONF_TEMPLATE, "r") as etc_pf:
             pf_conf = etc_pf.read()
