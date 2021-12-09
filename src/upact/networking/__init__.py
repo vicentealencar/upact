@@ -18,5 +18,4 @@ def dns_lookup(name):
         print(ex.msg)
         ipv6_result = []
 
-    return set(ipv4_result) | set(ipv6_result)
-
+    return (set(ipv4_result), set(ipv6_result))

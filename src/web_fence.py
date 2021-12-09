@@ -28,12 +28,17 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
 
     for url in urls_to_block:
         try:
-            for ip in networking.dns_lookup(url.name):
-                BlockedIp.get_or_create(address=ip, uri=url)
+            ips_v4, ips_v6 = networking.dns_lookup(url.name)
+            ips_v4 = {(ip, 4) for ip in ips_v4}
+            ips_v6 = {(ip, 6) for ip in ips_v6}
+            all_ips = ips_v4 | ips_v6
+
+            for (ip, version) in all_ips:
+                BlockedIp.get_or_create(address=ip, uri=url, version=version)
         except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
             logging.error(ex.msg)
 
-    return set([ip.address for ip in BlockedIp.select()])
+    return set([ip for ip in BlockedIp.select()])
 
 
 def block_ips(db, current_platform=platform.system(), config=config, current_time=datetime.now(), networking=networking):
