@@ -10,7 +10,7 @@ from upact.models import *
 import upact.networking as networking
 import upact.platforms
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def generate_ips(db, current_time=datetime.now(), networking=networking):
@@ -18,9 +18,6 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
     all_urls = [uri for uri in Uri.select().where(Uri.type_uri == 'url')]
     urls_to_block = [uri for uri in all_urls if not uri.is_active(when=current_time, now_date=current_time)]
     urls_to_unblock = [uri for uri in all_urls if uri.is_active(when=current_time, now_date=current_time)]
-
-    if current_time.hour == 15 and current_time.minute <= 10:
-        BlockedIp.truncate_table()
 
     ips_to_block = []
     for url in urls_to_block:
@@ -31,7 +28,20 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
             all_ips = ips_v4 | ips_v6
 
             for (ip, version) in all_ips:
-                ips_to_block.append(BlockedIp.get_or_create(address=ip, uri=url, version=version)[0])
+                blocked_ip = BlockedIp.get_or_none(BlockedIp.address==ip, BlockedIp.uri==url, BlockedIp.version==version)
+
+                if blocked_ip:
+                    blocked_ip.updated_at = current_time
+                    blocked_ip.save()
+                else:
+                    blocked_ip = BlockedIp.create(
+                            address=ip,
+                            uri=url,
+                            version=version,
+                            created_at=current_time,
+                            updated_at=current_time)
+
+                ips_to_block.append(blocked_ip)
         except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
             logging.error(ex.msg)
 
@@ -47,6 +57,8 @@ def update_ip_rules(db, current_platform=platform.system(), config=config, curre
     for ip in ips_to_unblock:
         ip.delete_instance()
 
+    for ip in BlockedIp.select().where(BlockedIp.updated_at <= current_time - timedelta(hours=config.IP_EXPIRY_TIME)):
+        ip.delete_instance()
 
 
 def run():

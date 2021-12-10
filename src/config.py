@@ -11,6 +11,7 @@ ALLOWED_DNSES_FILE = os.path.join(CONFIG_FOLDER, "nameservers-allowed.txt")
 URLS_TO_BLOCK = os.path.join(CONFIG_FOLDER, "url_block_list.txt")
 PORTS_TO_BLOCK = os.path.join(CONFIG_FOLDER, "block_ports.txt")
 WEB_PLAYTIME_RULES = os.path.join(CONFIG_FOLDER, "web_playtime_rules.json")
+IP_EXPIRY_TIME = 24 # how many hours to keep dangling ips around
 
 APPS_TO_BLOCK = os.path.join(CONFIG_FOLDER, "app_block_list.txt")
 APP_PLAYTIME_RULES = os.path.join(CONFIG_FOLDER, "app_playtime_rules.json")
