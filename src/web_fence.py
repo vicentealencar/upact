@@ -46,6 +46,7 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
             logging.error(ex.msg)
 
     ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
+    ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
 
     return (ips_to_block, ips_to_unblock)
 

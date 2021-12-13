@@ -173,3 +173,30 @@ class WebFenceTests(TestCase):
         ips_to_block = {ip.address for ip in upact.platforms['Test'].update_firewall.call_args[0][0]}
 
         self.assertEqual(ips_to_block, {'200.253.245.1'})
+
+    def test_ips_without_uri_unblocked(self):
+        upact.platforms['Test'] = Mock()
+
+        networking_mock = Mock()
+        networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
+
+        web_fence.update_ip_rules(
+            self.db,
+            current_platform='Test',
+            networking=networking_mock,
+            current_time=datetime(2021, 12, 1, 7, 0, 0))
+
+        self.test_uri.delete_instance(recursive=True)
+
+        web_fence.update_ip_rules(
+            self.db,
+            current_platform='Test',
+            networking=networking_mock,
+            current_time=datetime(2021, 12, 1, 7, 5, 0))
+
+        update_firewall_call = upact.platforms['Test'].update_firewall.call_args[0]
+        ips_to_block = update_firewall_call[0]
+        ips_to_unblock = update_firewall_call[1]
+
+        self.assertEqual(ips_to_block, [])
+        self.assertEqual(ips_to_unblock[0].address, '200.253.245.1')

@@ -1,4 +1,5 @@
 import subprocess
+import logging
 
 class Linux:
     def update_firewall(self, ips_to_block, ips_to_unblock, config):
@@ -8,7 +9,11 @@ class Linux:
             }
 
         for ip in ips_to_block:
-            subprocess.call(["sudo", command[ip.version], "-A", "OUTPUT", "-d", ip.address, "-j", "DROP"])
+            full_command = ["sudo", command[ip.version], "-A", "OUTPUT", "-d", ip.address, "-j", "DROP"]
+            logging.info(f'Running {" ".join(full_command)}')
+            subprocess.call(full_command)
 
         for ip in ips_to_unblock:
-            subprocess.call(["sudo", command[ip.version], "-D", "OUTPUT", "-d", ip.address, "-j", "DROP"])
+            full_command = ["sudo", command[ip.version], "-D", "OUTPUT", "-d", ip.address, "-j", "DROP"]
+            logging.info(f'Running {" ".join(full_command)}')
+            subprocess.call(full_command)
