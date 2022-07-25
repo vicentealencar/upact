@@ -2,9 +2,6 @@ import subprocess
 import logging
 
 class Windows:
-    # TODO: 1. Get all rules
-    #       2. Filter the ones created by upact. Use the following powershell script: (New-object -comObject HNetCfg.FwPolicy2).rules | select name | findstr /i "Cortana"
-    #       3. unblock them
 
     RULE_NAME_PREFIX = "upact"
 
