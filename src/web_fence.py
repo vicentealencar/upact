@@ -15,9 +15,13 @@ from datetime import datetime, timedelta
 
 def generate_ips(db, current_time=datetime.now(), networking=networking):
 
+    logging.info("Getting URLs from database")
+
     all_urls = [uri for uri in Uri.select().where(Uri.type_uri == 'url')]
     urls_to_block = [uri for uri in all_urls if not uri.is_active(when=current_time, now_date=current_time)]
     urls_to_unblock = [uri for uri in all_urls if uri.is_active(when=current_time, now_date=current_time)]
+
+    logging.info("DNS querying urls...")
 
     ips_to_block = []
     for url in urls_to_block:
@@ -48,11 +52,15 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
     ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
     ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
 
+    logging.info("Done querying URLs")
+
     return (ips_to_block, ips_to_unblock)
 
 
 def update_ip_rules(db, current_platform=platform.system(), config=config, current_time=datetime.now(), networking=networking):
     ips_to_block, ips_to_unblock = generate_ips(db, current_time=current_time, networking=networking)
+
+    logging.info("Updating firewall rules")
     upact.platforms[current_platform].update_firewall(ips_to_block, ips_to_unblock, config)
 
     for ip in ips_to_unblock:
@@ -71,8 +79,10 @@ def run():
     logging.info("Running upact web")
 
     db = pw.SqliteDatabase(config.DATABASE_FILE)
+    logging.info(f"Connecting to database at {config.DATABASE_FILE}")
     db.connect()
     database_proxy.initialize(db)
+    logging.info("Connection successful")
 
     update_ip_rules(db)
 

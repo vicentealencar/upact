@@ -19,12 +19,15 @@ class Windows:
         subprocess.call(remove_rule_command)
 
     def _raw_firewall_rules_output(self, rule_prefix):
+        command = f"(New-object -comObject HNetCfg.FwPolicy2).rules | select name | findstr /i '{rule_prefix}'"
         try:
+            logging.info(f"Running powershell command {command}")
             return subprocess.check_output(["powershell.exe", 
                                             "-Command",
-                                            f"(New-object -comObject HNetCfg.FwPolicy2).rules | select name | findstr /i '{rule_prefix}'"], 
+                                            command], 
                                         shell=True)
         except subprocess.CalledProcessError as ex:
+            logging.info(f"Exception from powershell command {command}")
             return b''
 
     def _parse_firewall_rules(self, raw_output):
@@ -35,8 +38,12 @@ class Windows:
 
     def update_firewall(self, ips_to_block, ips_to_unblock, config):
 
+        logging.info("Removing existing rules...")
         for rule_name in self._list_firewall_rules_names():
             self._remove_rule(rule_name)
 
+        logging.info("Adding new rules...")
         for ip in ips_to_block:
             self._block_ip(ip.address)
+
+        logging.info("Done updating blocked ips")
