@@ -6,7 +6,7 @@ import peewee as pw
 
 import config
 
-from upact.models import *
+from upact.models import Uri, BlockedIp, PlaytimeRule, database_proxy
 import upact.networking as networking
 import upact.platforms
 
@@ -49,6 +49,10 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
         except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
             logging.error(ex.msg)
 
+    permanently_blocked_ips_uri = [uri for uri in Uri.select().where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP)]
+    permanently_blocked_ips = [ip for uri in permanently_blocked_ips_uri for ip in uri.ips]
+
+    ips_to_block += permanently_blocked_ips
     ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
     ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
 
