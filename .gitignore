@@ -3,5 +3,8 @@ private/
 auto_generated/
 data/temp/
 __pycache__/
+build/
+dist/
+data/database.db
 nameservers-all.txt
 pf.conf
