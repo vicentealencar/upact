@@ -20,6 +20,9 @@ class WebFenceTests(TestCase):
         self.test_uri = Uri(name="www.google.com")
         self.test_uri.save()
 
+        self.permanently_blocked_uri = Uri(name="", type_uri=Uri.TYPE_PERMANENTLY_BLOCKED_IP)
+        self.permanently_blocked_uri.save()
+
         self.rule1 = PlaytimeRule(from_time="14:00", to_time="18:00", frequency="every day", uri=self.test_uri)
         self.rule1.save()
 
@@ -200,3 +203,23 @@ class WebFenceTests(TestCase):
 
         self.assertEqual(ips_to_block, [])
         self.assertEqual(ips_to_unblock[0].address, '200.253.245.1')
+
+    def test_permanently_blocked_ip(self):
+        current_time = datetime(2021, 12, 1, 11, 0, 0)
+
+        BlockedIp.create(
+                address="200.253.236.1",
+                uri=self.permanently_blocked_uri,
+                version=4,
+                created_at=current_time,
+                updated_at=current_time)
+
+        networking_mock = Mock()
+        networking_mock.dns_lookup.side_effect = [({'200.253.245.1'}, {'2345:0425:2CA1:0000:0000:0567:5673:23b5'})]
+        ips_to_block, ips_to_unblock = web_fence.generate_ips(
+                self.db,
+                current_time=current_time,
+                networking=networking_mock)
+
+        self.assertEqual({ip.address for ip in ips_to_block}, {'200.253.245.1', '2345:0425:2CA1:0000:0000:0567:5673:23b5', '200.253.236.1'})
+        self.assertEqual({ip.version for ip in ips_to_block}, {4, 6})
