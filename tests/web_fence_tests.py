@@ -3,7 +3,7 @@ import peewee as pw
 import upact.platforms
 import web_fence
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -97,6 +97,13 @@ class WebFenceTests(TestCase):
         upact.platforms['Test'] = Mock()
         networking_mock = Mock()
 
+        BlockedIp.create(
+                address="200.253.236.1",
+                uri=self.permanently_blocked_uri,
+                version=4,
+                created_at=datetime(2021, 12, 1, 7, 0, 0),
+                updated_at=datetime(2021, 12, 1, 7, 0, 0))
+
         networking_mock.dns_lookup.return_value = ({'200.253.245.1'}, set())
         web_fence.update_ip_rules(
             self.db,
@@ -104,7 +111,7 @@ class WebFenceTests(TestCase):
             networking=networking_mock,
             current_time=datetime(2021, 12, 1, 7, 0, 0))
 
-        self.assertEqual(len([ip for ip in BlockedIp.select()]), 1)
+        self.assertEqual({ip.address for ip in BlockedIp.select()}, {'200.253.236.1', '200.253.245.1'})
 
         networking_mock.dns_lookup.return_value = ({'200.253.245.2'}, set())
         web_fence.update_ip_rules(
@@ -113,8 +120,8 @@ class WebFenceTests(TestCase):
             networking=networking_mock,
             current_time=datetime(2021, 12, 2, 8, 0, 0))
 
-        all_ips = [ip for ip in BlockedIp.select()]
-        self.assertEqual(len(all_ips), 1)
+        all_ips = [ip.address for ip in BlockedIp.select()]
+        self.assertEqual(set(all_ips), {'200.253.245.2', '200.253.236.1'})
 
 
     def test_ip_clears_when_playtime_activates(self):

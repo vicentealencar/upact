@@ -70,7 +70,7 @@ def update_ip_rules(db, current_platform=platform.system(), config=config, curre
     for ip in ips_to_unblock:
         ip.delete_instance()
 
-    for ip in BlockedIp.select().where(BlockedIp.updated_at <= current_time - timedelta(hours=config.IP_EXPIRY_TIME)):
+    for ip in BlockedIp.select().join(Uri).where((Uri.type_uri == Uri.TYPE_URL) & (BlockedIp.updated_at <= current_time - timedelta(hours=config.IP_EXPIRY_TIME))):
         ip.delete_instance()
 
 
