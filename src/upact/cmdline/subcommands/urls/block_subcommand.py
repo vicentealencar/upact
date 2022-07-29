@@ -22,8 +22,8 @@ class BlockAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
         setattr(namespace,
-                'command',
-                lambda namespace: BlockSubcommand(namespace.urls_to_block, namespace.playtime_days, namespace.playtime_hours)())
+                'init_command',
+                lambda namespace: BlockSubcommand(namespace.urls_to_block, namespace.playtime_days, namespace.playtime_hours))
 
 
 class AllowAction(argparse.Action):

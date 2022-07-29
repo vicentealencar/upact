@@ -19,5 +19,5 @@ class RemoveAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
         setattr(namespace,
-                'command',
-                lambda namespace: RemoveSubcommand(namespace.urls_to_remove)())
+                'init_command',
+                lambda namespace: RemoveSubcommand(namespace.urls_to_remove))

@@ -1,5 +1,8 @@
 import argparse
 
+from upact import store
+from upact.models import Uri
+
 
 class ListSubcommand(object):
 
@@ -7,15 +10,17 @@ class ListSubcommand(object):
         self.result = None
 
     def _render(self):
-        print("hello list!!")
+        for uri in self.result:
+            print(f"Url: {uri.name}")
 
     def __call__(self):
+        self.result = store.uri.list(Uri.TYPE_URL)
         self._render()
 
 
 class ListAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace,
-                'command',
-                lambda namespace: ListSubcommand()())
+                'init_command',
+                lambda namespace: ListSubcommand())
 

@@ -2,8 +2,10 @@ import argparse
 import shlex
 
 from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from upact.cmdline.subcommands.urls import sub_parser
+from upact.models import Uri
 
 class UrlsCmdlineTests(TestCase):
     
@@ -93,9 +95,15 @@ class UrlsCmdlineTests(TestCase):
     def test_multiple_days_fails(self):
         self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every weekend" --allow="every year" --playtime_hours 17:00 19:00')))
 
-    def test_listing(self):
+    @patch("upact.store.uri.list")
+    def test_listing(self, list_uri):
         result = self.parser.parse_args(shlex.split('--list'))
-        self.assertTrue(result.command is not None)
+
+        list_uri.return_value = [Uri(name="google.com", type_uri=Uri.TYPE_URL), Uri(name="facebook.com", type_uri=Uri.TYPE_URL)]
+        command = result.init_command(result)
+        command()
+
+        list_uri.assert_called_once_with(Uri.TYPE_URL)
 
     def test_listing_and_remove_fails(self):
         self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --remove google.com')))
@@ -105,8 +113,8 @@ class UrlsCmdlineTests(TestCase):
 
     def test_function_handler(self):
         result = self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every week" --at-interval 13:00 15:00 --at-interval 17:00 19:00'))
-        result.command(result)
+        result.init_command(result)
 
     def test_remove_action_handler(self):
         result = self.parser.parse_args(shlex.split('--remove www.google.com facebook.com'))
-        result.command(result)
+        result.init_command(result)
