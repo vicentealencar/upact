@@ -95,6 +95,12 @@ class UrlsCmdlineTests(TestCase):
     def test_multiple_days_fails(self):
         self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every weekend" --allow="every year" --playtime_hours 17:00 19:00')))
 
+    def test_listing_and_remove_fails(self):
+        self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --remove google.com')))
+
+    def test_listing_and_block_fails(self):
+        self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --block google.com')))
+
     @patch("upact.store.uri.list")
     def test_listing(self, list_uri):
         result = self.parser.parse_args(shlex.split('--list'))
@@ -105,16 +111,11 @@ class UrlsCmdlineTests(TestCase):
 
         list_uri.assert_called_once_with(Uri.TYPE_URL)
 
-    def test_listing_and_remove_fails(self):
-        self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --remove google.com')))
+    @patch("upact.store.uri.remove")
+    def test_removing(self, remove_uri):
+        result = self.parser.parse_args(shlex.split('--remove google.com facebook.com'))
 
-    def test_listing_and_block_fails(self):
-        self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --block google.com')))
+        command = result.init_command(result)
+        command()
 
-    def test_function_handler(self):
-        result = self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every week" --at-interval 13:00 15:00 --at-interval 17:00 19:00'))
-        result.init_command(result)
-
-    def test_remove_action_handler(self):
-        result = self.parser.parse_args(shlex.split('--remove www.google.com facebook.com'))
-        result.init_command(result)
+        remove_uri.assert_called_once_with(["google.com", "facebook.com"])

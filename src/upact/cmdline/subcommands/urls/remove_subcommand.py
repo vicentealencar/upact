@@ -1,5 +1,8 @@
 import argparse
 
+from upact import store
+from upact.models import Uri
+
 
 class RemoveSubcommand(object):
 
@@ -8,9 +11,10 @@ class RemoveSubcommand(object):
         self.result = None
 
     def _render(self):
-        print("hello remove!!")
+        print("Success")
 
     def __call__(self):
+        self.result = store.uri.remove(self.urls_to_remove)
         self._render()
 
 
