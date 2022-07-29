@@ -105,4 +105,4 @@ class UrlsCmdlineTests(TestCase):
 
     def test_function_handler(self):
         result = self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every week" --at-interval 13:00 15:00 --at-interval 17:00 19:00'))
-        result.func(result)
+        result.command(result)
