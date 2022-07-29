@@ -95,7 +95,7 @@ class UrlsCmdlineTests(TestCase):
 
     def test_listing(self):
         result = self.parser.parse_args(shlex.split('--list'))
-        self.assertTrue(result.list)
+        self.assertTrue(result.command is not None)
 
     def test_listing_and_remove_fails(self):
         self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --remove google.com')))
@@ -105,4 +105,8 @@ class UrlsCmdlineTests(TestCase):
 
     def test_function_handler(self):
         result = self.parser.parse_args(shlex.split('--block www.google.com google.com --allow="every week" --at-interval 13:00 15:00 --at-interval 17:00 19:00'))
+        result.command(result)
+
+    def test_remove_action_handler(self):
+        result = self.parser.parse_args(shlex.split('--remove www.google.com facebook.com'))
         result.command(result)
