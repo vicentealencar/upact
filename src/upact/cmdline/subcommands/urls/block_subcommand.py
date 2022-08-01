@@ -1,6 +1,9 @@
 import argparse
 from recurrent import RecurringEvent
 
+from upact import store
+from upact.models import Uri
+
 
 class BlockSubcommand(object):
 
@@ -11,9 +14,10 @@ class BlockSubcommand(object):
         self.result = None
 
     def _render(self):
-        print("hello world!!")
+        print("Success")
 
     def __call__(self):
+        self.result = store.uri.block(self.urls_to_block, playtime_days, playtime_hours)
         self._render()
 
 
