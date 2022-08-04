@@ -8,14 +8,14 @@ def list(uri_type=None):
         return Uri.select()
 
 
-def block(names_list, playtime_days, playtime_hours):
+def block(urls_to_block, playtime_days, playtime_hours):
 
     saved_uris = []
-    for name in names_list:
+    for name in urls_to_block:
         uri = Uri(name=name, type_uri=Uri.TYPE_URL)
         uri.save()
 
-        for ph in playtime_hours:
+        for ph in (playtime_hours or []):
             playtime_rule = PlaytimeRules(from_time=ph[0], to_time=ph[1], frequency=playtime_days, uri=uri)
             playtime_rule.save()
 
@@ -23,6 +23,8 @@ def block(names_list, playtime_days, playtime_hours):
 
     return saved_uris
 
-def remove(names_list):
+def remove(urls_to_remove):
     for name in urls_to_remove:
-        Uri.select().find_one(Uri.name==name).delete_instance(recursive=True)
+        for uri in Uri.select().where(Uri.name==name):
+            uri.delete_instance(recursive=True)
+

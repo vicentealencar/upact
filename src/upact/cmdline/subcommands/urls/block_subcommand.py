@@ -1,4 +1,6 @@
 import argparse
+import upact.store.uri
+
 from recurrent import RecurringEvent
 
 from upact import store
