@@ -119,3 +119,12 @@ class UrlsCmdlineTests(TestCase):
         command()
 
         remove_uri.assert_called_once_with(["google.com", "facebook.com"])
+
+    @patch("upact.store.uri.block")
+    def test_blocking(self, block_uri):
+        result = self.parser.parse_args(shlex.split('--block google.com facebook.com --allow="every week" --at-interval 13:00 15:00 --at-interval 17:00 19:00'))
+
+        command = result.init_command(result)
+        command()
+
+        block_uri.assert_called_once_with(["google.com", "facebook.com"], "every week", [["13:00", "15:00"], ["17:00", "19:00"]])

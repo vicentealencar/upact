@@ -17,7 +17,7 @@ class BlockSubcommand(object):
         print("Success")
 
     def __call__(self):
-        self.result = store.uri.block(self.urls_to_block, playtime_days, playtime_hours)
+        self.result = store.uri.block(self.urls_to_block, self.playtime_days, self.playtime_hours)
         self._render()
 
 
