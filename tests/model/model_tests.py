@@ -1,6 +1,8 @@
+import peewee as pw
+
 from datetime import datetime, time
 from unittest import TestCase
-from upact.models import PlaytimeRule, BlockedIp, Uri
+from upact.models import PlaytimeRule, BlockedIp, Uri, database_proxy
 
 class ModelTests(TestCase):
 
@@ -41,3 +43,20 @@ class ModelTests(TestCase):
         ip2 = BlockedIp(address="200.253.245.1", uri=uri2, version=4)
 
         self.assertEqual(ip1, ip2)
+
+    def test_invalid_playtime_frequency_raises(self):
+        self.db = pw.SqliteDatabase(":memory:")
+        self.db.connect()
+        database_proxy.initialize(self.db)
+        database_proxy.create_tables([Uri, PlaytimeRule])
+
+        uri = Uri(name="google.com")
+        uri.save()
+
+        rule = PlaytimeRule(from_time=time(12, 0), to_time=time(16, 0), frequency="every brazilian carnival", uri=uri)
+
+        try:
+            rule.save()
+            assert False
+        except ValueError as e:
+            assert True

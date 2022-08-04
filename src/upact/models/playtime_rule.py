@@ -1,4 +1,5 @@
 import peewee as pw
+import playhouse.signals as ps
 
 from datetime import datetime
 from dateutil import rrule
@@ -22,3 +23,9 @@ class PlaytimeRule(BaseModel):
         time_in_interval = self.from_time <= when.time() and when.time() < self.to_time       
 
         return day_in_recurrence and time_in_interval
+
+@ps.pre_save(sender=PlaytimeRule)
+def verify_frequency_string(model_class, instance, created):
+    if RecurringEvent().parse(instance.frequency) is None:
+        raise ValueError(f"Invalid frequency: {instance.frequency}")
+
