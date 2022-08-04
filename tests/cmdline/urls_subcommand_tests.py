@@ -1,11 +1,12 @@
 import argparse
+import datetime
 import shlex
 
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from upact.cmdline.subcommands.urls import sub_parser
-from upact.models import Uri
+from upact.models import Uri, PlaytimeRule
 
 class UrlsCmdlineTests(TestCase):
     
@@ -105,11 +106,23 @@ class UrlsCmdlineTests(TestCase):
     def test_listing(self, list_uri):
         result = self.parser.parse_args(shlex.split('--list'))
 
-        list_uri.return_value = [Uri(name="google.com", type_uri=Uri.TYPE_URL), Uri(name="facebook.com", type_uri=Uri.TYPE_URL)]
+        uri1 = Mock()
+        uri1.name = "google.com"
+        uri1.type_uri = Uri.TYPE_URL
+        uri1.playtime_rules = []
+
+        uri2 = Mock()
+        uri2.name = "facebook.com"
+        uri2.type_uri = Uri.TYPE_URL
+        uri2.playtime_rules = [PlaytimeRule(frequency="every day", from_time=datetime.time(14,0), to_time=datetime.time(15, 0))]
+
+        list_uri.return_value = [uri1, uri2]
+
         command = result.init_command(result)
         command()
 
         list_uri.assert_called_once_with(Uri.TYPE_URL)
+        self.assertEqual(command.display_string, '+--------------+-------------------------------------+\n| Blocked Url  |             Exceptions              |\n+--------------+-------------------------------------+\n| google.com   |                                     |\n+--------------+-------------------------------------+\n| facebook.com | every day from 14:00:00 to 15:00:00 |\n+--------------+-------------------------------------+')
 
     @patch("upact.store.uri.remove")
     def test_removing(self, remove_uri):
