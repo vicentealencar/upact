@@ -6,6 +6,12 @@ from upact.models import PlaytimeRule, BlockedIp, Uri, database_proxy
 
 class ModelTests(TestCase):
 
+    def init_db(self):
+        self.db = pw.SqliteDatabase(":memory:")
+        self.db.connect()
+        database_proxy.initialize(self.db)
+        database_proxy.create_tables([Uri, PlaytimeRule])
+
     def test_playtime_rule_active(self):
         rule = PlaytimeRule(from_time=time(12, 0), to_time=time(16, 0), frequency="every day")
         test_date = datetime(2021, 1, 1, 14, 0)
@@ -45,10 +51,7 @@ class ModelTests(TestCase):
         self.assertEqual(ip1, ip2)
 
     def test_invalid_playtime_frequency_raises(self):
-        self.db = pw.SqliteDatabase(":memory:")
-        self.db.connect()
-        database_proxy.initialize(self.db)
-        database_proxy.create_tables([Uri, PlaytimeRule])
+        self.init_db()
 
         uri = Uri(name="google.com")
         uri.save()
@@ -60,3 +63,20 @@ class ModelTests(TestCase):
             assert False
         except ValueError as e:
             assert True
+
+    def test_duplicate_name_raises(self):
+        self.init_db()
+
+        Uri(name="google.com").save()
+
+        try:
+            Uri(name="google.com").save()
+        except pw.IntegrityError as e:
+            assert True
+            
+    def test_duplicate_name_different_type(self):
+        self.init_db()
+
+        Uri(name="google.com").save()
+
+        Uri(name="google.com", type_uri=Uri.TYPE_APP).save()

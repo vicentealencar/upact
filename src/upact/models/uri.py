@@ -19,3 +19,4 @@ class Uri(BaseModel):
 
     class Meta:
         constraints = [pw.Check(f"type_uri='{TYPE_URL}' or type_uri='{TYPE_APP}' or type_uri='{TYPE_PERMANENTLY_BLOCKED_IP}'")]
+        indexes = ((('name', 'type_uri'), True),)
