@@ -1,7 +1,7 @@
 import peewee as pw
 
 import upact.platforms
-import web_fence
+import upact.fences.web as web_fence
 
 from datetime import datetime, timedelta
 from unittest import TestCase

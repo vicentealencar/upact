@@ -5,7 +5,7 @@ import win32event
 import servicemanager
 import time
 
-import web_fence
+import upact.fences.web as web_fence
 
 class UpactWebSvc (win32serviceutil.ServiceFramework):
     _svc_name_ = "UpactWebService"
