@@ -1,3 +1,4 @@
+import ipaddress
 from upact.models import BlockedIp
 
 
@@ -9,9 +10,9 @@ def block(ips_to_block, uri):
 
     saved_ips = []
     for ip_address in ips_to_block:
-        blocked_ip = BlockedIp(address=ip_address, uri=uri)
+        blocked_ip = BlockedIp(address=ip_address, uri=uri, version=ipaddress.ip_address(ip_address).version)
         blocked_ip.save()
-        saved_ips.append(blocked_ips)
+        saved_ips.append(blocked_ip)
 
     return saved_ips
 
