@@ -91,5 +91,5 @@ class ModelTests(TestCase):
         permanently_blocked_uris = [uri for uri in Uri.select().where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP)]
 
         self.assertEqual(len(permanently_blocked_uris), 1)
-        self.assertEqual(permanently_blocked_uris[0].name, "")
+        self.assertEqual(permanently_blocked_uris[0].name, "Permanently blocked Ip")
         self.assertEqual(permanently_blocked_uris[0].type_uri, Uri.TYPE_PERMANENTLY_BLOCKED_IP)

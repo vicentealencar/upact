@@ -19,7 +19,7 @@ class Uri(BaseModel):
 
     @classmethod
     def permanently_blocked_ips_uri(cls):
-        return cls.get_or_create(name="", type_uri=TYPE_PERMANENTLY_BLOCKED_IP)[0]
+        return cls.get_or_create(name="Permanently blocked Ip", type_uri=TYPE_PERMANENTLY_BLOCKED_IP)[0]
 
     class Meta:
         constraints = [pw.Check(f"type_uri='{TYPE_URL}' or type_uri='{TYPE_APP}' or type_uri='{TYPE_PERMANENTLY_BLOCKED_IP}'")]
