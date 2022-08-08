@@ -17,6 +17,10 @@ class Uri(BaseModel):
     def is_active(self, when=datetime.now(), now_date=datetime.now()):
         return any([playtime.is_active(when=when, now_date=now_date) for playtime in self.playtime_rules])
 
+    @classmethod
+    def permanently_blocked_ips_uri(cls):
+        return cls.get_or_create(name="", type_uri=TYPE_PERMANENTLY_BLOCKED_IP)[0]
+
     class Meta:
         constraints = [pw.Check(f"type_uri='{TYPE_URL}' or type_uri='{TYPE_APP}' or type_uri='{TYPE_PERMANENTLY_BLOCKED_IP}'")]
         indexes = ((('name', 'type_uri'), True),)

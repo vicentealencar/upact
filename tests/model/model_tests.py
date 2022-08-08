@@ -80,3 +80,16 @@ class ModelTests(TestCase):
         Uri(name="google.com").save()
 
         Uri(name="google.com", type_uri=Uri.TYPE_APP).save()
+
+    def test_permanently_blocked_ips_singleton(self):
+        self.init_db()
+
+        self.assertEqual([uri for uri in Uri.select().where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP)], [])
+
+        Uri.permanently_blocked_ips_uri()
+
+        permanently_blocked_uris = [uri for uri in Uri.select().where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP)]
+
+        self.assertEqual(len(permanently_blocked_uris), 1)
+        self.assertEqual(permanently_blocked_uris[0].name, "")
+        self.assertEqual(permanently_blocked_uris[0].type_uri, Uri.TYPE_PERMANENTLY_BLOCKED_IP)
