@@ -4,6 +4,7 @@ import config
 import peewee as pw
 
 from upact.cmdline.subcommands import urls
+from upact.cmdline.subcommands import ips
 from upact.models import database_proxy
 
 def run():
@@ -15,6 +16,7 @@ def run():
     subparsers = main_parser.add_subparsers()
 
     urls.sub_parser(subparsers)
+    ips.sub_parser(subparsers)
 
     parsed_args = main_parser.parse_args()
 
