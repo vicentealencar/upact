@@ -27,6 +27,9 @@ class IpsCmdlineTests(TestCase):
     def test_list_block_fails(self):
         self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--list --block 200.253.245.1')))
 
+    def test_remove_no_ips_fails(self):
+        self.check_command_fails(lambda: self.parser.parse_args(shlex.split('--remove')))
+
     @patch("upact.store.ips.list")
     def test_listing(self, list_ips):
         result = self.parser.parse_args(shlex.split('--list'))
@@ -68,3 +71,12 @@ class IpsCmdlineTests(TestCase):
         command()
 
         block_ips.assert_called_once_with(['200.253.245.1', '200.253.236.1'], uri=uri)
+
+    @patch("upact.store.ips.remove")
+    def test_blocking(self, block_ips):
+        result = self.parser.parse_args(shlex.split('--remove 200.253.245.1 200.253.236.1'))
+
+        command = result.init_command(result)
+        command()
+
+        block_ips.assert_called_once_with(['200.253.245.1', '200.253.236.1'])
