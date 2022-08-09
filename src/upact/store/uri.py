@@ -26,5 +26,5 @@ def block(urls_to_block, playtime_days=None, playtime_hours=[], type_uri=Uri.TYP
 def remove(urls_to_remove):
     for name in urls_to_remove:
         for uri in Uri.select().where(Uri.name==name):
-            uri.delete_instance(recursive=True)
+            uri.delete_instance(recursive=True, delete_nullable=True)
 

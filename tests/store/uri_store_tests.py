@@ -1,6 +1,7 @@
 import datetime
 import peewee as pw
 import upact.store.uri
+import upact.store.ips
 
 from upact import store
 from upact.models import Uri, PlaytimeRule, BlockedIp, database_proxy
@@ -59,6 +60,17 @@ class UriStoreTests(TestCase):
         store.uri.remove(["google.com"])
         self.assertEqual({ uri.name for uri in Uri.select() }, {"facebook.com"})
         self.assertEqual({ pt for pt in PlaytimeRule.select() }, set())
+
+    def test_remove_with_ips(self):
+        blocked_uris = store.uri.block(["facebook.com"])
+
+        store.ips.block(['200.253.245.1', '200.253.236.1'], blocked_uris[0])
+
+        self.assertEqual(set([ip.address for ip in store.ips.list()]), {'200.253.236.1', '200.253.245.1'})
+        store.uri.remove(["facebook.com"])
+
+        self.assertEqual([ip for ip in store.ips.list()], [])
+        self.assertEqual([uri for uri in store.uri.list()], [])
 
     def test_list(self):
         store.uri.block(["google.com", "facebook.com"])
