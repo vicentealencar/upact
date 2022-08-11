@@ -13,13 +13,27 @@ import upact.platforms
 from datetime import datetime, timedelta
 
 
-def generate_ips(db, current_time=datetime.now(), networking=networking):
+def permanently_blocked_ips(db, current_time=datetime.now(), networking=networking):
+    return list(BlockedIp.select().join(Uri).where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP))
+
+
+def ips_to_unblock(db, current_time=datetime.now(), networking=networking):
+    all_urls = [uri for uri in Uri.select().where(Uri.type_uri == 'url')]
+
+    urls_to_unblock = [uri for uri in all_urls if uri.is_active(when=current_time, now_date=current_time)]
+
+    ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
+    ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
+
+    return ips_to_unblock
+
+
+def blocked_ips_from_urls(db, current_time=datetime.now(), networking=networking):
 
     logging.info("Getting URLs from database")
 
     all_urls = [uri for uri in Uri.select().where(Uri.type_uri == 'url')]
     urls_to_block = [uri for uri in all_urls if not uri.is_active(when=current_time, now_date=current_time)]
-    urls_to_unblock = [uri for uri in all_urls if uri.is_active(when=current_time, now_date=current_time)]
 
     logging.info("DNS querying urls...")
 
@@ -49,15 +63,14 @@ def generate_ips(db, current_time=datetime.now(), networking=networking):
         except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as ex:
             logging.error(ex.msg)
 
-    permanently_blocked_ips = list(BlockedIp.select().join(Uri).where(Uri.type_uri == Uri.TYPE_PERMANENTLY_BLOCKED_IP))
-
-    ips_to_block += permanently_blocked_ips
-    ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
-    ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
 
     logging.info("Done querying URLs")
 
-    return (ips_to_block, ips_to_unblock)
+    return ips_to_block
+
+def generate_ips(db, current_time=datetime.now(), networking=networking):
+    return (permanently_blocked_ips(db, current_time, networking) + blocked_ips_from_urls(db, current_time, networking),
+            ips_to_unblock(db, current_time, networking))
 
 
 def update_ip_rules(db, current_platform=platform.system(), config=config, current_time=datetime.now(), networking=networking):

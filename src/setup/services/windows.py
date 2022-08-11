@@ -1,11 +1,19 @@
 import sys
+import logging
+import peewee as pw
+
 import win32serviceutil
 import win32service
 import win32event
 import servicemanager
 import time
 
+import config
+
 import upact.fences.web as web_fence
+import upact.platforms
+from upact.models import database_proxy
+
 
 class UpactWebSvc (win32serviceutil.ServiceFramework):
     _svc_name_ = "UpactWebService"
@@ -29,8 +37,38 @@ class UpactWebSvc (win32serviceutil.ServiceFramework):
         self.main()
 
     def main(self):
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)-8s %(message)s',
+            level=logging.INFO,
+            datefmt='%Y-%m-%d %H:%M:%S')
+
+        logging.info("Starting upact web")
+
+        db = pw.SqliteDatabase(config.DATABASE_FILE)
+        logging.info(f"Connecting to database at {config.DATABASE_FILE}")
+        db.connect()
+        database_proxy.initialize(db)
+        logging.info("Connection successful")
+
+        windows = upact.platforms['Windows']
+
+        logging.info("Updating permanently blocked ips")
+
+        windows.update_firewall(
+            ips_to_block=web_fence.permanently_blocked_ips(db),
+            ips_to_unblock=[],
+            config=config,
+            rule_name="upact permanently_blocked_ips")
+
+        logging.info("Update successful")
+
+        
         while self._running:
-            web_fence.run()
+            windows.update_firewall(
+                ips_to_block=web_fence.blocked_ips_from_urls(db),
+                ips_to_unblock=[],
+                config=config,
+                rule_name="upact ips from urls")
 
             time.sleep(5 * 60)
 
