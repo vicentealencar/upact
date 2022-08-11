@@ -1,7 +1,9 @@
 import subprocess
 import logging
 
-class Linux:
+from upact.platforms.base_platform import BasePlatform
+
+class Linux(BasePlatform):
     def update_firewall(self, ips_to_block, ips_to_unblock, config):
         command = {
                 4: "iptables",

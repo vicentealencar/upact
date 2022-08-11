@@ -1,4 +1,8 @@
-import upact.fences.web
+import config
+import upact.platforms
+import upact.fences as fences
+import upact.store as store
+
 
 if __name__ == "__main__":
-    upact.fences.web.run()
+    fences.web.start_service(upact.platforms.current_platform(config), store.init_db(config.DATABASE_FILE), debug=True)

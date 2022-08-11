@@ -1,7 +1,9 @@
 import os
 import subprocess
 
-class Darwin:
+from upact.platforms.base_platform import BasePlatform
+
+class Darwin(BasePlatform):
     def update_firewall(self, ips_to_block, ips_to_unblock, config):
         ip_addresses = {ip.address for ip in ips_to_block}
 

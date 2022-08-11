@@ -1,6 +1,6 @@
 import dns.resolver
 import logging
-import platform
+import time
 
 import peewee as pw
 
@@ -8,9 +8,11 @@ import config
 
 from upact.models import Uri, BlockedIp, PlaytimeRule, database_proxy
 import upact.networking as networking
-import upact.platforms
 
 from datetime import datetime, timedelta
+
+
+_RUNNING = False
 
 
 def permanently_blocked_ips(db, current_time=datetime.now(), networking=networking):
@@ -24,9 +26,18 @@ def ips_to_unblock(db, current_time=datetime.now(), networking=networking):
 
     ips_to_unblock = [ip for url in urls_to_unblock for ip in url.ips]
     ips_to_unblock += [ip for ip in BlockedIp.select().where(BlockedIp.uri.is_null())]
+    ips_to_unblock += [ip for ip in BlockedIp.select().join(Uri).where((Uri.type_uri == Uri.TYPE_URL) & (BlockedIp.updated_at <= current_time - timedelta(hours=config.IP_EXPIRY_TIME)))]
 
     return ips_to_unblock
 
+
+def unblock_ips(db, current_time=datetime.now(), networking=networking):
+    target_ips = ips_to_unblock(db, current_time, networking)
+
+    for ip in target_ips:
+        ip.delete_instance()
+
+    return target_ips
 
 def blocked_ips_from_urls(db, current_time=datetime.now(), networking=networking):
 
@@ -68,36 +79,23 @@ def blocked_ips_from_urls(db, current_time=datetime.now(), networking=networking
 
     return ips_to_block
 
-def generate_ips(db, current_time=datetime.now(), networking=networking):
-    return (permanently_blocked_ips(db, current_time, networking) + blocked_ips_from_urls(db, current_time, networking),
-            ips_to_unblock(db, current_time, networking))
 
+def start_service(platform, db, debug=False, current_time=datetime.now(), networking=networking):
+    global _RUNNING
+    _RUNNING = True
 
-def update_ip_rules(db, current_platform=platform.system(), config=config, current_time=datetime.now(), networking=networking):
-    ips_to_block, ips_to_unblock = generate_ips(db, current_time=current_time, networking=networking)
+    platform.update_permanently_blocked_ips(permanently_blocked_ips(db, current_time=current_time, networking=networking))
 
-    logging.info("Updating firewall rules")
-    upact.platforms[current_platform].update_firewall(ips_to_block, ips_to_unblock, config)
+    while _RUNNING:
+        platform.update_ips_from_urls(
+            ips_to_block=blocked_ips_from_urls(db, current_time=current_time, networking=networking),
+            ips_to_unblock=unblock_ips(db, current_time=current_time, networking=networking))
 
-    for ip in ips_to_unblock:
-        ip.delete_instance()
+        if debug:
+            break
 
-    for ip in BlockedIp.select().join(Uri).where((Uri.type_uri == Uri.TYPE_URL) & (BlockedIp.updated_at <= current_time - timedelta(hours=config.IP_EXPIRY_TIME))):
-        ip.delete_instance()
+        time.sleep(5 * 60)
 
-
-def run():
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S')
-
-    logging.info("Running upact web")
-
-    db = pw.SqliteDatabase(config.DATABASE_FILE)
-    logging.info(f"Connecting to database at {config.DATABASE_FILE}")
-    db.connect()
-    database_proxy.initialize(db)
-    logging.info("Connection successful")
-
-    update_ip_rules(db)
+def stop_service():
+    global _RUNNING
+    _RUNNING = False
