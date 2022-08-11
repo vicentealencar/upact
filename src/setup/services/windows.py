@@ -8,7 +8,9 @@ import time
 
 import config
 
+import upact.fences.web as web_fence
 import upact.platforms
+import upact.store as store
 
 
 class UpactWebSvc (win32serviceutil.ServiceFramework):
@@ -18,12 +20,11 @@ class UpactWebSvc (win32serviceutil.ServiceFramework):
     def __init__(self,args):
         win32serviceutil.ServiceFramework.__init__(self,args)
         self.hWaitStop = win32event.CreateEvent(None,0,0,None)
-        self.platform = upact.platforms.Windows(config)
 
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
-        self.platform.stop_service()
+        web_fence.stop_service()
 
     def SvcDoRun(self):
         servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
@@ -32,7 +33,7 @@ class UpactWebSvc (win32serviceutil.ServiceFramework):
         self.main()
 
     def main(self):
-        self.platform.start_service()
+        web_fence.start_service(upact.platforms.current_platform(config), store.init_db(config.DATABASE_FILE), debug=False)
 
 
 if __name__ == '__main__':
